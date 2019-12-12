@@ -2,6 +2,7 @@ package ru.javabegin.tutorial.androidfinance.core.decorator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -41,7 +42,6 @@ public class OperationSync implements OperationDAO {
         for (Operation operation : operationList) {
             identityMap.put(operation.getId(), operation);
         }
-
         fillOperationMap();
     }
 
@@ -54,7 +54,6 @@ public class OperationSync implements OperationDAO {
                 }
                 operationMap.put(type, list);
             }
-
         }
     }
 
@@ -65,6 +64,7 @@ public class OperationSync implements OperationDAO {
 
     @Override
     public List<Operation> getAll() {
+        Collections.sort(operationList);
         return operationList;
     }
 
@@ -75,16 +75,15 @@ public class OperationSync implements OperationDAO {
 
     @Override
     public boolean update(Operation operation) {
-        if (operationDAO.update(operation)) {
-            return true;
-        }
-        return false;
+        return delete(operationDAO.get(operation.getId()))
+                && add(operation);
     }
 
     @Override
     public boolean delete(Operation operation) {
         if (operationDAO.delete(operation) && revertBalance(operation)) {
             removeFromCollections(operation);
+            return true;
         }
         return false;
     }

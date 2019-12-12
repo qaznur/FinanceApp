@@ -126,4 +126,6 @@ public abstract class AbstractTreeNode implements TreeNode {
     public boolean hasParent() {
         return parent != null;
     }
+
+
 }

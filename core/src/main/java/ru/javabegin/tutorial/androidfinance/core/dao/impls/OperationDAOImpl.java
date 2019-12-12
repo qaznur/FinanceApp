@@ -148,7 +148,7 @@ public class OperationDAOImpl implements OperationDAO {
                 TransferOperation operation = new TransferOperation();
                 operation.setFromStorage(storageIdentityMap.get(rs.getLong("from_storage_id")));
                 operation.setToStorage(storageIdentityMap.get(rs.getLong("to_storage_id")));
-                operation.setFromAmount(rs.getBigDecimal("from_storage_id"));
+                operation.setFromAmount(rs.getBigDecimal("from_amount"));
                 operation.setFromCurrency(Currency.getInstance(rs.getString("from_currency_code")));
 
                 return operation;
@@ -159,7 +159,7 @@ public class OperationDAOImpl implements OperationDAO {
 
     @Override
     public boolean update(Operation operation) {
-        return false;
+        return delete(operation) && add(operation);
     }
 
     @Override

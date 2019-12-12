@@ -4,7 +4,7 @@ import java.util.Calendar;
 
 import ru.javabegin.tutorial.androidfinance.core.objects.OperationType;
 
-public interface Operation {
+public interface Operation extends Comparable<Operation> {
 
     long getId();
 

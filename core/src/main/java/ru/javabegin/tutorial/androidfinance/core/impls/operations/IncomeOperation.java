@@ -7,6 +7,7 @@ import java.util.Currency;
 import ru.javabegin.tutorial.androidfinance.core.abstracts.AbstractOperation;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.Source;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.Storage;
+import ru.javabegin.tutorial.androidfinance.core.objects.OperationType;
 
 public class IncomeOperation extends AbstractOperation {
 
@@ -16,6 +17,7 @@ public class IncomeOperation extends AbstractOperation {
     private BigDecimal fromAmount;
 
     public IncomeOperation() {
+        setOperationType(OperationType.INCOME);
     }
 
     public IncomeOperation(long id, Calendar dateTime, String description, Source fromSource, Storage toStorage, Currency fromCurrency, BigDecimal fromAmount) {

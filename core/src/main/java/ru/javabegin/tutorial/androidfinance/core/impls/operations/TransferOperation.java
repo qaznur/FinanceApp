@@ -6,6 +6,7 @@ import java.util.Currency;
 
 import ru.javabegin.tutorial.androidfinance.core.abstracts.AbstractOperation;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.Storage;
+import ru.javabegin.tutorial.androidfinance.core.objects.OperationType;
 
 public class TransferOperation extends AbstractOperation {
 
@@ -16,6 +17,7 @@ public class TransferOperation extends AbstractOperation {
 
 
     public TransferOperation() {
+        setOperationType(OperationType.TRANSFER);
     }
 
     public TransferOperation(long id, Calendar dateTime, String addInfo, Storage fromStorage, Storage toStorage, Currency fromCurrency, BigDecimal fromAmount) {

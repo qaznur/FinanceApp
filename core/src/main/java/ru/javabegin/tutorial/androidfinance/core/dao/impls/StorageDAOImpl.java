@@ -13,6 +13,7 @@ import java.util.List;
 
 import ru.javabegin.tutorial.androidfinance.core.dao.interfaces.StorageDAO;
 import ru.javabegin.tutorial.androidfinance.core.database.SQLiteConnection;
+import ru.javabegin.tutorial.androidfinance.core.exceptions.CurrencyException;
 import ru.javabegin.tutorial.androidfinance.core.impls.DefaultStorage;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.Storage;
 
@@ -85,22 +86,41 @@ public class StorageDAOImpl implements StorageDAO {
     public List<Storage> getAll() {
         storageList.clear();
 
-        String query = "select * from " + STORAGE_TABLE;
-        try (Statement statement = SQLiteConnection.getConnection().createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
+        try {
+            String query = "select * from " + STORAGE_TABLE;
+            try (Statement statement = SQLiteConnection.getConnection().createStatement();
+                 ResultSet resultSet = statement.executeQuery(query)) {
 
-            while (resultSet.next()) {
-                DefaultStorage storage = new DefaultStorage();
-                storage.setId(resultSet.getLong("id"));
-                storage.setParentId(resultSet.getLong("parent_id"));
-                storage.setName(resultSet.getString("name"));
+                while (resultSet.next()) {
+                    DefaultStorage storage = new DefaultStorage();
+                    storage.setId(resultSet.getLong("id"));
+                    storage.setParentId(resultSet.getLong("parent_id"));
+                    storage.setName(resultSet.getString("name"));
 
-                storageList.add(storage);
+                    storageList.add(storage);
+                }
             }
+
+            String currencyQuery = "select * from " + CURRENCY_TABLE + " where storage_id=?";
+            for (Storage storage : storageList) {
+                try (PreparedStatement preparedStatement = SQLiteConnection.getConnection().prepareStatement(currencyQuery)) {
+                    preparedStatement.setLong(1, storage.getId());
+
+                    try (ResultSet rs = preparedStatement.executeQuery()) {
+                        while (rs.next()) {
+                            storage.addCurrency(Currency.getInstance(rs.getString("currency_code")), rs.getBigDecimal("amount"));
+                        }
+                    } catch (CurrencyException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
             return storageList;
-        } catch (SQLException e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+
         return null;
     }
 
@@ -148,10 +168,10 @@ public class StorageDAOImpl implements StorageDAO {
     @Override
     public boolean delete(Storage storage) {
 
-        String query = "delete from" + STORAGE_TABLE + " where id=?";
+        String query = "delete from " + STORAGE_TABLE + " where id=?";
         try (PreparedStatement statement = SQLiteConnection.getConnection().prepareStatement(query)) {
 
-            statement.setLong(2, storage.getId());
+            statement.setLong(1, storage.getId());
 
             if (statement.executeUpdate() == 1) {
                 return true;
@@ -174,7 +194,7 @@ public class StorageDAOImpl implements StorageDAO {
                 stmt.setString(1, storage.getName());
 
                 if (storage.hasParent()) {
-                    stmt.setLong(2, storage.getParentId());
+                    stmt.setLong(2, storage.getParent().getId());
                 } else {
                     stmt.setNull(2, Types.BIGINT);
                 }
@@ -199,7 +219,7 @@ public class StorageDAOImpl implements StorageDAO {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         } finally {
             try {

@@ -6,6 +6,7 @@ import java.util.Currency;
 
 import ru.javabegin.tutorial.androidfinance.core.abstracts.AbstractOperation;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.Storage;
+import ru.javabegin.tutorial.androidfinance.core.objects.OperationType;
 
 public class ConvertOperation extends AbstractOperation {
 
@@ -17,6 +18,7 @@ public class ConvertOperation extends AbstractOperation {
     private BigDecimal toAmount;
 
     public ConvertOperation() {
+        setOperationType(OperationType.CONVERT);
     }
 
     public ConvertOperation(long id, Calendar dateTime, String addInfo, Storage fromStorage, Storage toStorage, Currency fromCurrency, Currency toCurrency, BigDecimal fromAmount, BigDecimal toAmount) {
