@@ -52,8 +52,8 @@ public class OperationSync implements OperationDAO {
                 if (operation.getOperationType() == type) {
                     list.add(operation);
                 }
-                operationMap.put(type, list);
             }
+            operationMap.put(type, list);
         }
     }
 
@@ -164,7 +164,7 @@ public class OperationSync implements OperationDAO {
 
     @Override
     public boolean add(Operation operation) {
-        if(operationDAO.add(operation)) {
+        if (operationDAO.add(operation)) {
             addToCollections(operation);
 
             boolean updateAmountResult = false;
@@ -222,7 +222,7 @@ public class OperationSync implements OperationDAO {
                 e.printStackTrace();
             }
 
-            if(!updateAmountResult) {
+            if (!updateAmountResult) {
                 delete(operation);
                 return false;
             }

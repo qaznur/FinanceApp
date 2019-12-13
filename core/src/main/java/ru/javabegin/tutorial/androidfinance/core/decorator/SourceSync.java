@@ -5,7 +5,6 @@ import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import ru.javabegin.tutorial.androidfinance.core.dao.interfaces.SourceDAO;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.Source;
@@ -36,13 +35,23 @@ public class SourceSync implements SourceDAO {
             identityMap.put(source.getId(), source);
             treeUtils.addToTree(source.getParentId(), source, treeList);
         }
-        fillSourceMap(treeList);
+        fillSourceMap();
     }
 
-    private void fillSourceMap(List<Source> list) {
-        for (final OperationType type : OperationType.values()) {
-            sourceMap.put(type, list.stream().filter(source -> source.getOperationType() == type)
-                    .collect(Collectors.toList()));
+    private void fillSourceMap() {
+//        for (final OperationType type : OperationType.values()) {
+//            sourceMap.put(type, list.stream().filter(source -> source.getOperationType() == type)
+//                    .collect(Collectors.toList()));
+//        }
+
+        for (OperationType type : OperationType.values()) {
+            List<Source> list = new ArrayList<>();
+            for (Source source : treeList) {
+                if (source.getOperationType() == type) {
+                    list.add(source);
+                }
+            }
+            sourceMap.put(type, list);
         }
     }
 
