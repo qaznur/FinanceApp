@@ -15,10 +15,7 @@ public interface Storage extends TreeNode{
     BigDecimal getApproxAmount(Currency currency);
     Map<Currency, BigDecimal> getCurrencyAmounts();
 
-
-    // Изменение баланса
     void updateAmount(BigDecimal amount, Currency currency) throws AmountException, CurrencyException;
-
 
     // Работа с валютой
     void addCurrency(Currency currency, BigDecimal initAmount) throws CurrencyException;

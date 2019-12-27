@@ -1,5 +1,6 @@
 package ru.javabegin.tutorial.androidfinance.core.decorator;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -75,7 +76,7 @@ public class SourceSync implements SourceDAO {
     }
 
     @Override
-    public boolean update(Source source) {
+    public boolean update(Source source) throws SQLException {
         if (sourceDAO.update(source)) {
             return true;
         }
@@ -83,7 +84,7 @@ public class SourceSync implements SourceDAO {
     }
 
     @Override
-    public boolean delete(Source source) {
+    public boolean delete(Source source) throws SQLException {
         if (sourceDAO.delete(source)) {
             removeFromCollections(source);
             return true;
@@ -92,7 +93,7 @@ public class SourceSync implements SourceDAO {
     }
 
     @Override
-    public boolean add(Source source) {
+    public boolean add(Source source) throws SQLException {
         if (sourceDAO.add(source)) {
             addToCollections(source);
             return true;

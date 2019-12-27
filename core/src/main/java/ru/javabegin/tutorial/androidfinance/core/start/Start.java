@@ -1,24 +1,13 @@
 package ru.javabegin.tutorial.androidfinance.core.start;
 
-import java.math.BigDecimal;
-import java.util.Currency;
-
-import ru.javabegin.tutorial.androidfinance.core.dao.impls.OperationDAOImpl;
-import ru.javabegin.tutorial.androidfinance.core.dao.impls.SourceDAOImpl;
-import ru.javabegin.tutorial.androidfinance.core.dao.impls.StorageDAOImpl;
-import ru.javabegin.tutorial.androidfinance.core.decorator.OperationSync;
-import ru.javabegin.tutorial.androidfinance.core.decorator.SourceSync;
-import ru.javabegin.tutorial.androidfinance.core.decorator.StorageSync;
-import ru.javabegin.tutorial.androidfinance.core.impls.operations.IncomeOperation;
-
 public class Start {
 
     public static void main(String[] args) {
 
-        StorageSync storageSync = new StorageSync(new StorageDAOImpl());
-        SourceSync sourceSync = new SourceSync(new SourceDAOImpl());
-        OperationSync operationSync = new OperationSync(new OperationDAOImpl(sourceSync.getIdentityMap(),
-                storageSync.getIdendityMap()), sourceSync, storageSync);
+//        StorageSync storageSync = new StorageSync(new StorageDAOImpl());
+//        SourceSync sourceSync = new SourceSync(new SourceDAOImpl());
+//        OperationSync operationSync = new OperationSync(new OperationDAOImpl(sourceSync.getIdentityMap(),
+//                storageSync.getIdendityMap()), sourceSync, storageSync);
 
 
 //        Storage storage = storageSync.get(7);
@@ -75,11 +64,11 @@ public class Start {
 
 //        operationSync.delete(operationSync.get(11));
 
-        ((IncomeOperation) operationSync.get(18)).setFromAmount(BigDecimal.valueOf(150));
-        ((IncomeOperation) operationSync.get(18)).setFromCurrency(Currency.getInstance("RUB"));
-        ((IncomeOperation) operationSync.get(18)).setToStorage(storageSync.get(6));
-        operationSync.update(operationSync.get(18));
-        operationSync.getAll();
+//        ((IncomeOperation) operationSync.get(18)).setFromAmount(BigDecimal.valueOf(150));
+//        ((IncomeOperation) operationSync.get(18)).setFromCurrency(Currency.getInstance("RUB"));
+//        ((IncomeOperation) operationSync.get(18)).setToStorage(storageSync.get(6));
+//        operationSync.update(operationSync.get(18));
+//        operationSync.getAll();
 
     }
 

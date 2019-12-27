@@ -158,12 +158,12 @@ public class OperationDAOImpl implements OperationDAO {
     }
 
     @Override
-    public boolean update(Operation operation) {
+    public boolean update(Operation operation) throws SQLException {
         return delete(operation) && add(operation);
     }
 
     @Override
-    public boolean delete(Operation operation) {
+    public boolean delete(Operation operation) throws SQLException {
         String query = "delete from " + OPERATION_TABLE + " where id=?";
         try (PreparedStatement stmt = SQLiteConnection.getConnection().prepareStatement(query)) {
             stmt.setLong(1, operation.getId());
@@ -171,8 +171,6 @@ public class OperationDAOImpl implements OperationDAO {
             if (stmt.executeUpdate() == 1) {
                 return true;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return false;
     }

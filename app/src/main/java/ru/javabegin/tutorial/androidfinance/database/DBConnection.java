@@ -1,6 +1,5 @@
-package ru.javabegin.tutorial.androidfinance;
+package ru.javabegin.tutorial.androidfinance.database;
 
-import android.app.Application;
 import android.content.Context;
 
 import java.io.File;
@@ -9,36 +8,44 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class MyApp extends Application {
+import ru.javabegin.tutorial.androidfinance.core.database.Initializer;
+import ru.javabegin.tutorial.androidfinance.utils.MyApp;
+
+public class DBConnection {
 
     private static final String TAG = MyApp.class.getName();
 
     private static final String DB_NAME = "money.db";
+    private static final String DRIVER_CLASS = "org.sqldroid.SQLDroidDriver";
+
     private static String dbFolderPath;
     private static String dbPath;
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        try {
-            checkDbExist(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static void initConnection(Context context) {
+        checkDbExist(context);
+        Initializer.load(DRIVER_CLASS, "jdbc:sqldroid:" + dbPath);
     }
 
-    private static void checkDbExist(Context context) throws IOException {
+    private static void checkDbExist(Context context)  {
         dbFolderPath = context.getApplicationInfo().dataDir + "/" + "database/";
         dbPath = dbFolderPath + DB_NAME;
+
+        if(checkDatabaseExists()) {
+            new File(dbPath).delete();
+        }
+
         if (!checkDatabaseExists()) {
             File dbFolder = new File(dbFolderPath);
             if (!dbFolder.exists()) {
-                if (dbFolder.mkdirs()) {
-                    File dbFile = new File(dbPath);
-                    if (dbFile.createNewFile()) {
-                        copyDatabase(context);
-                    }
+                dbFolder.mkdirs();
+            }
+            File dbFile = new File(dbPath);
+            try {
+                if (dbFile.createNewFile()) {
+                    copyDatabase(context);
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

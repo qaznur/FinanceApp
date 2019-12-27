@@ -148,7 +148,7 @@ public class StorageDAOImpl implements StorageDAO {
     }
 
     @Override
-    public boolean update(Storage storage) {
+    public boolean update(Storage storage) throws SQLException {
         String query = "update " + STORAGE_TABLE + " set name=? where id=?";
         try (PreparedStatement statement = SQLiteConnection.getConnection().prepareStatement(query)) {
 
@@ -158,8 +158,6 @@ public class StorageDAOImpl implements StorageDAO {
             if (statement.executeUpdate() == 1) {
                 return true;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
 
         return false;

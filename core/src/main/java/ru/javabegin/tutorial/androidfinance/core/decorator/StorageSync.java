@@ -1,6 +1,7 @@
 package ru.javabegin.tutorial.androidfinance.core.decorator;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.HashMap;
@@ -83,7 +84,7 @@ public class StorageSync implements StorageDAO {
     }
 
     @Override
-    public boolean update(Storage storage) {
+    public boolean update(Storage storage) throws SQLException {
         if (storageDAO.update(storage)) {
             return true;
         }
@@ -91,7 +92,7 @@ public class StorageSync implements StorageDAO {
     }
 
     @Override
-    public boolean delete(Storage storage) {
+    public boolean delete(Storage storage) throws SQLException {
         if (storageDAO.delete(storage)) {
             removeFromCollections(storage);
             return true;
@@ -100,7 +101,7 @@ public class StorageSync implements StorageDAO {
     }
 
     @Override
-    public boolean add(Storage storage) {
+    public boolean add(Storage storage) throws SQLException {
         if(storageDAO.add(storage)) {
             addToCollections(storage);
             return true;

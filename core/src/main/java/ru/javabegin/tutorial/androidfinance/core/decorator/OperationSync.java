@@ -1,6 +1,7 @@
 package ru.javabegin.tutorial.androidfinance.core.decorator;
 
 import java.math.BigDecimal;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -74,13 +75,13 @@ public class OperationSync implements OperationDAO {
     }
 
     @Override
-    public boolean update(Operation operation) {
+    public boolean update(Operation operation) throws SQLException {
         return delete(operationDAO.get(operation.getId()))
                 && add(operation);
     }
 
     @Override
-    public boolean delete(Operation operation) {
+    public boolean delete(Operation operation) throws SQLException {
         if (operationDAO.delete(operation) && revertBalance(operation)) {
             removeFromCollections(operation);
             return true;
@@ -88,7 +89,7 @@ public class OperationSync implements OperationDAO {
         return false;
     }
 
-    private boolean revertBalance(Operation operation) {
+    private boolean revertBalance(Operation operation) throws SQLException {
         boolean updateAmountResult = false;
 
         try {
@@ -163,7 +164,7 @@ public class OperationSync implements OperationDAO {
     }
 
     @Override
-    public boolean add(Operation operation) {
+    public boolean add(Operation operation) throws SQLException {
         if (operationDAO.add(operation)) {
             addToCollections(operation);
 

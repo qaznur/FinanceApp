@@ -46,13 +46,13 @@ public class SourceDAOImpl implements SourceDAO {
 
     @Override
     public Source get(long id) {
-        String query = "select * from " + SOURCE_TABLE +" where id=?";
-        try(PreparedStatement pstmt = SQLiteConnection.getConnection().prepareStatement(query)) {
+        String query = "select * from " + SOURCE_TABLE + " where id=?";
+        try (PreparedStatement pstmt = SQLiteConnection.getConnection().prepareStatement(query)) {
             pstmt.setLong(1, id);
 
-            try(ResultSet rs = pstmt.executeQuery()) {
+            try (ResultSet rs = pstmt.executeQuery()) {
                 DefaultSource source = null;
-                if(rs.next()) {
+                if (rs.next()) {
                     source = new DefaultSource();
                     source.setId(rs.getLong("id"));
                     source.setName(rs.getString("name"));
@@ -85,7 +85,7 @@ public class SourceDAOImpl implements SourceDAO {
     }
 
     @Override
-    public boolean delete(Source source) {
+    public boolean delete(Source source) throws SQLException {
         String query = "delete from " + SOURCE_TABLE + " where id=?";
         try (PreparedStatement statement = SQLiteConnection.getConnection().prepareStatement(query)) {
             statement.setLong(1, source.getId());
@@ -93,8 +93,6 @@ public class SourceDAOImpl implements SourceDAO {
             if (statement.executeUpdate() == 1) {
                 return true;
             }
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
         return false;
     }
@@ -102,19 +100,19 @@ public class SourceDAOImpl implements SourceDAO {
     @Override
     public boolean add(Source source) {
         String query = "insert into " + SOURCE_TABLE + " (name, parent_id, operation_type_id) values(?,?,?)";
-        try(PreparedStatement stmt = SQLiteConnection.getConnection().prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = SQLiteConnection.getConnection().prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setString(1, source.getName());
 
-            if(source.hasParent()) {
+            if (source.hasParent()) {
                 stmt.setLong(2, source.getParent().getId());
             } else {
                 stmt.setNull(2, Types.BIGINT);
             }
             stmt.setLong(3, source.getOperationType().getId());
 
-            if(stmt.executeUpdate() == 1) {
-                try(ResultSet resultSet = stmt.getGeneratedKeys()) {
-                    if(resultSet.next()) {
+            if (stmt.executeUpdate() == 1) {
+                try (ResultSet resultSet = stmt.getGeneratedKeys()) {
+                    if (resultSet.next()) {
                         source.setId(resultSet.getLong(1));
                     }
                     return true;
@@ -131,11 +129,11 @@ public class SourceDAOImpl implements SourceDAO {
         sourceList.clear();
 
         String query = "select * from " + SOURCE_TABLE + " where operation_type_id=?";
-        try(PreparedStatement stmt = SQLiteConnection.getConnection().prepareStatement(query)) {
+        try (PreparedStatement stmt = SQLiteConnection.getConnection().prepareStatement(query)) {
 
             stmt.setLong(1, operationType.getId());
 
-            try(ResultSet rs = stmt.executeQuery()) {
+            try (ResultSet rs = stmt.executeQuery()) {
                 DefaultSource source;
 
                 while (rs.next()) {
