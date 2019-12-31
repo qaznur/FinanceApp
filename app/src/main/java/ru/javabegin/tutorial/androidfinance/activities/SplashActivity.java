@@ -22,6 +22,7 @@ public class SplashActivity extends AppCompatActivity {
                 imitateLoading();
                 Intent intent = new Intent(SplashActivity.this, MainActivity.class);
                 startActivity(intent);
+                finish();
             }
         }).start();
     }

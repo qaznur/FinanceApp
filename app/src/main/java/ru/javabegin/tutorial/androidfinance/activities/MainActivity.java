@@ -1,5 +1,6 @@
 package ru.javabegin.tutorial.androidfinance.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -7,6 +8,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -22,23 +24,25 @@ import java.util.List;
 
 import ru.javabegin.tutorial.androidfinance.R;
 import ru.javabegin.tutorial.androidfinance.core.database.Initializer;
+import ru.javabegin.tutorial.androidfinance.core.impls.DefaultSource;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.Source;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.TreeNode;
 import ru.javabegin.tutorial.androidfinance.core.objects.OperationType;
-import ru.javabegin.tutorial.androidfinance.fragments.SprFragment;
+import ru.javabegin.tutorial.androidfinance.fragments.SprListFragment;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, SprFragment.OnListFragmentInteractionListener {
+        implements NavigationView.OnNavigationItemSelectedListener, SprListFragment.OnListFragmentInteractionListener {
 
-    private TreeNode selectedNode;
+    private TreeNode selectedParentNode;
     private List<? extends TreeNode> list;
 
     private TextView toolbarTitle;
     private Toolbar toolbar;
     private ImageView backIcon;
+    private ImageView addIcon;
     private TabLayout tabLayout;
 
-    private SprFragment sprFragment;
+    private SprListFragment sprListFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +65,9 @@ public class MainActivity extends AppCompatActivity
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
+                backIcon.setVisibility(View.INVISIBLE);
+                toolbarTitle.setText(R.string.sources);
+
                 switch (tab.getPosition()) {
                     case 0:
                         list = Initializer.getSourceSync().getAll();
@@ -72,7 +79,7 @@ public class MainActivity extends AppCompatActivity
                         list = Initializer.getSourceSync().getList(OperationType.OUTCOME);
                         break;
                 }
-                sprFragment.updateData(list);
+                sprListFragment.updateList(list);
             }
 
             @Override
@@ -118,17 +125,29 @@ public class MainActivity extends AppCompatActivity
         backIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(selectedNode.getParent() == null) {
-                    OperationType type = ((Source) selectedNode).getOperationType();
-                    sprFragment.updateData(Initializer.getSourceSync().getList(type));
+                if (selectedParentNode.getParent() == null) {
+                    sprListFragment.updateList(list);
                     toolbarTitle.setText(R.string.sources);
                     backIcon.setVisibility(View.INVISIBLE);
                 } else {
-                    sprFragment.updateData(selectedNode.getParent().getChildren());
-                    selectedNode = selectedNode.getParent();
-                    toolbarTitle.setText(selectedNode.getName());
-                    backIcon.setVisibility(View.VISIBLE);
+                    sprListFragment.updateList(selectedParentNode.getParent().getChildren());
+                    selectedParentNode = selectedParentNode.getParent();
+                    toolbarTitle.setText(selectedParentNode.getName());
                 }
+            }
+        });
+
+        addIcon = findViewById(R.id.img_add_node);
+        addIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DefaultSource source = new DefaultSource();
+                if (selectedParentNode != null) {
+                    source.setOperationType(((Source) selectedParentNode).getOperationType());
+                }
+                Intent intent = new Intent(MainActivity.this, EditSourceActivity.class);
+                intent.putExtra(EditSourceActivity.NODE_OBJECT, source);
+                startActivityForResult(intent, EditSourceActivity.REQUEST_NODE_ADD);
             }
         });
     }
@@ -136,8 +155,8 @@ public class MainActivity extends AppCompatActivity
     private void initFragment() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        sprFragment = new SprFragment();
-        fragmentTransaction.replace(R.id.fragment_container, sprFragment);
+        sprListFragment = new SprListFragment();
+        fragmentTransaction.replace(R.id.fragment_container, sprListFragment);
         fragmentTransaction.commit();
     }
 
@@ -200,12 +219,23 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onItemClicked(TreeNode node) {
-        this.selectedNode = node;
-        if(selectedNode != null && selectedNode.hasChilds()) {
-            toolbarTitle.setText(selectedNode.getName());
+        this.selectedParentNode = node;
+        if (selectedParentNode.hasChilds()) {
+            toolbarTitle.setText(selectedParentNode.getName());// показывает выбранную категорию
             backIcon.setVisibility(View.VISIBLE);
-        } else {
-            this.selectedNode = node.getParent();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            if (requestCode == EditSourceActivity.REQUEST_NODE_EDIT) {
+                if (data != null) {
+                    TreeNode node = (TreeNode) data.getSerializableExtra(EditSourceActivity.NODE_OBJECT);
+                    sprListFragment.updateNode(node);
+                }
+            }
         }
     }
 }

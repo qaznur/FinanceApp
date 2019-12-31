@@ -1,5 +1,6 @@
 package ru.javabegin.tutorial.androidfinance.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -23,21 +24,21 @@ import java.sql.SQLException;
 import java.util.List;
 
 import ru.javabegin.tutorial.androidfinance.R;
-import ru.javabegin.tutorial.androidfinance.activities.EditActivity;
+import ru.javabegin.tutorial.androidfinance.activities.EditSourceActivity;
 import ru.javabegin.tutorial.androidfinance.core.database.Initializer;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.Source;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.TreeNode;
-import ru.javabegin.tutorial.androidfinance.fragments.SprFragment.OnListFragmentInteractionListener;
+import ru.javabegin.tutorial.androidfinance.fragments.SprListFragment.OnListFragmentInteractionListener;
 
 public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<TreeNodeAdapter.ViewHolder> {
 
     private static final String TAG = TreeNodeAdapter.class.getName();
 
-    public static final String SPR_NAME = "sprName";
-
     private Context context;
     private List<T> list;
     private final OnListFragmentInteractionListener clickListener;
+
+    private int selectedNodePosition;
 
     public TreeNodeAdapter(Context context, List<T> items, OnListFragmentInteractionListener listener) {
         list = items;
@@ -79,6 +80,10 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
             }
         });
 
+        initPopupMenu(holder, position, node);
+    }
+
+    private void initPopupMenu(final ViewHolder holder, final int position, final TreeNode node) {
         holder.buttonPopup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -96,9 +101,8 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
                         if (id == R.id.item_add) {
 
                         } else if (id == R.id.item_edit) {
-                            Intent intent = new Intent(context, EditActivity.class);
-                            intent.putExtra(SPR_NAME, node.getName());
-                            context.startActivity(intent);
+                            selectedNodePosition = position;
+                            runEditActivity(node);
 
                         } else if (id == R.id.item_delete) {
                             new AlertDialog.Builder(context)
@@ -148,6 +152,12 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
         });
     }
 
+    private void runEditActivity(TreeNode node) {
+        Intent intent = new Intent(context, EditSourceActivity.class);
+        intent.putExtra(EditSourceActivity.NODE_OBJECT, node);
+        ((Activity) context).startActivityForResult(intent, EditSourceActivity.REQUEST_NODE_EDIT);
+    }
+
     private void deleteNode(Source node, int position) {
         try {
             Initializer.getSourceSync().delete(node);
@@ -169,6 +179,15 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
     public void updateList(List<T> newList) {
         list = newList;
         notifyDataSetChanged();
+    }
+
+    public void updateNode(TreeNode node) {
+        try {
+            Initializer.getSourceSync().update((Source) node);
+            notifyItemChanged(selectedNodePosition);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {

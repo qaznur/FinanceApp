@@ -1,6 +1,8 @@
 package ru.javabegin.tutorial.androidfinance.core.objects;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public enum OperationType {
@@ -9,10 +11,12 @@ public enum OperationType {
 
     private Integer id;
     private static Map<Integer, OperationType> map = new HashMap<>();
+    private static List<OperationType> list = new ArrayList<>();
 
     static {
         for(OperationType type: OperationType.values()) {
             map.put(type.getId(), type);
+            list.add(type);
         }
     }
 
@@ -22,6 +26,10 @@ public enum OperationType {
 
     public static OperationType getType(int id) {
         return map.get(id);
+    }
+
+    public static List<OperationType> getList() {
+        return list;
     }
 
     public Integer getId() {

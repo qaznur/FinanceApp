@@ -78,6 +78,8 @@ public class SourceSync implements SourceDAO {
     @Override
     public boolean update(Source source) throws SQLException {
         if (sourceDAO.update(source)) {
+            identityMap.get(source.getId()).setName(source.getName());
+            // TODO также обновлять иконку
             return true;
         }
         return false;

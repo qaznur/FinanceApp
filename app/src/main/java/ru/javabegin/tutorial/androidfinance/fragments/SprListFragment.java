@@ -17,7 +17,7 @@ import ru.javabegin.tutorial.androidfinance.R;
 import ru.javabegin.tutorial.androidfinance.core.database.Initializer;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.TreeNode;
 
-public class SprFragment extends Fragment {
+public class SprListFragment extends Fragment {
 
     private static final String ARG_COLUMN_COUNT = "column-count";
     private int mColumnCount = 1;
@@ -25,9 +25,6 @@ public class SprFragment extends Fragment {
 
     private TreeNodeAdapter adapter;
     private List<? extends TreeNode> list;
-
-    public SprFragment() {
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -68,7 +65,7 @@ public class SprFragment extends Fragment {
         }
 
         list = Initializer.getSourceSync().getAll();
-        adapter = new TreeNodeAdapter(getContext(),list, clickListener);
+        adapter = new TreeNodeAdapter(getContext(), list, clickListener);
     }
 
     @Override
@@ -77,8 +74,12 @@ public class SprFragment extends Fragment {
         clickListener = null;
     }
 
-    public void updateData(List<? extends TreeNode> list) {
+    public void updateList(List<? extends TreeNode> list) {
         adapter.updateList(list);
+    }
+
+    public void updateNode(TreeNode node) {
+        adapter.updateNode(node);
     }
 
     public interface OnListFragmentInteractionListener {

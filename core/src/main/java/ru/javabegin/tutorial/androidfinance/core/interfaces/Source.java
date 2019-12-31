@@ -6,4 +6,7 @@ public interface Source extends TreeNode{
 
     OperationType getOperationType();
 
+    void setOperationType(OperationType type);
+
+
 }

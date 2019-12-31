@@ -1,8 +1,9 @@
 package ru.javabegin.tutorial.androidfinance.core.interfaces;
 
+import java.io.Serializable;
 import java.util.List;
 
-public interface TreeNode {
+public interface TreeNode extends Serializable {
 
     long getId();
 
@@ -27,5 +28,7 @@ public interface TreeNode {
     boolean hasParent();
 
     void setId(long id);
+
+    void setName(String name);
 
 }

@@ -38,5 +38,6 @@
     <string name="outcome">Расход</string>
 
     <string name="title">Название</string>
+    <string name="type">Тип</string>
 
 </resources>
