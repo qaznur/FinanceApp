@@ -5,7 +5,7 @@ android {
     buildToolsVersion "29.0.0"
     defaultConfig {
         applicationId "ru.javabegin.tutorial.androidfinance"
-        minSdkVersion 21
+        minSdkVersion 19
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
@@ -30,6 +30,8 @@ dependencies {
     implementation 'com.google.android.material:material:+'
     implementation 'androidx.constraintlayout:constraintlayout:+'
     implementation 'androidx.recyclerview:recyclerview:+'
+    implementation 'com.yqritc:recyclerview-flexibledivider:+'
+    implementation 'jp.wasabeef:recyclerview-animators:+'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.2.0'

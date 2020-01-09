@@ -100,7 +100,8 @@ public class SourceDAOImpl implements SourceDAO {
     @Override
     public boolean add(Source source) {
         String query = "insert into " + SOURCE_TABLE + " (name, parent_id, operation_type_id) values(?,?,?)";
-        try (PreparedStatement stmt = SQLiteConnection.getConnection().prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+        try (PreparedStatement stmt = SQLiteConnection.getConnection().prepareStatement(query);
+             Statement stmtId = SQLiteConnection.getConnection().createStatement()) {
             stmt.setString(1, source.getName());
 
             if (source.hasParent()) {
@@ -111,7 +112,7 @@ public class SourceDAOImpl implements SourceDAO {
             stmt.setLong(3, source.getOperationType().getId());
 
             if (stmt.executeUpdate() == 1) {
-                try (ResultSet resultSet = stmt.getGeneratedKeys()) {
+                try (ResultSet resultSet = stmtId.executeQuery("select last_insert_rowid()")) {
                     if (resultSet.next()) {
                         source.setId(resultSet.getLong(1));
                     }

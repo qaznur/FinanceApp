@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.yqritc.recyclerviewflexibledivider.HorizontalDividerItemDecoration;
+
 import java.util.List;
 
 import ru.javabegin.tutorial.androidfinance.R;
@@ -48,6 +50,7 @@ public class SprListFragment extends Fragment {
             } else {
                 recyclerView.setLayoutManager(new GridLayoutManager(context, mColumnCount));
             }
+            recyclerView.addItemDecoration(new HorizontalDividerItemDecoration.Builder(getContext()).margin(90, 0).build());
             recyclerView.setAdapter(adapter);
         }
         return view;
@@ -75,14 +78,23 @@ public class SprListFragment extends Fragment {
     }
 
     public void updateList(List<? extends TreeNode> list) {
-        adapter.updateList(list);
+        adapter.updateList(list, TreeNodeAdapter.animatorParents);
     }
 
     public void updateNode(TreeNode node) {
         adapter.updateNode(node);
     }
 
+    public void addNode(TreeNode node) {
+        adapter.addNode(node);
+    }
+
+    public void addChild(TreeNode node) {
+        adapter.addChild(node);
+    }
+
     public interface OnListFragmentInteractionListener {
         void onItemClicked(TreeNode node);
+        void onPopupMenuClicked(TreeNode node);
     }
 }

@@ -15,6 +15,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.ActivityOptionsCompat;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.ViewCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.snackbar.BaseTransientBottomBar;
@@ -23,9 +26,11 @@ import com.google.android.material.snackbar.Snackbar;
 import java.sql.SQLException;
 import java.util.List;
 
+import jp.wasabeef.recyclerview.animators.BaseItemAnimator;
 import ru.javabegin.tutorial.androidfinance.R;
 import ru.javabegin.tutorial.androidfinance.activities.EditSourceActivity;
 import ru.javabegin.tutorial.androidfinance.core.database.Initializer;
+import ru.javabegin.tutorial.androidfinance.core.impls.DefaultSource;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.Source;
 import ru.javabegin.tutorial.androidfinance.core.interfaces.TreeNode;
 import ru.javabegin.tutorial.androidfinance.fragments.SprListFragment.OnListFragmentInteractionListener;
@@ -35,19 +40,29 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
     private static final String TAG = TreeNodeAdapter.class.getName();
 
     private Context context;
-    private List<T> list;
+    private List<T> adapterList;
     private final OnListFragmentInteractionListener clickListener;
 
     private int selectedNodePosition;
 
+    public static BaseItemAnimator animatorChilds; // анимация при открытии дочерних элементов (справа налево)
+    public static BaseItemAnimator animatorParents; // анимация при открытии родительских элементов (слево направо)
+
+    private Snackbar snackbar;
+    private RecyclerView recyclerView;
+
     public TreeNodeAdapter(Context context, List<T> items, OnListFragmentInteractionListener listener) {
-        list = items;
+        adapterList = items;
         clickListener = listener;
         this.context = context;
     }
 
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        snackbar = Snackbar.make(parent, R.string.deleted, Snackbar.LENGTH_LONG);
+        recyclerView = (RecyclerView) parent;
+        createAnimations();
+
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.spr_node, parent, false);
         return new ViewHolder(view);
@@ -57,14 +72,18 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
     public void onBindViewHolder(final TreeNodeAdapter.ViewHolder holder, final int position) {
         Log.d(TAG, "onBindViewHolder");
 
-        final TreeNode node = list.get(position);
+        final TreeNode node = adapterList.get(position);
 
         holder.tvSprName.setText(node.getName());
         String childCount;
-        if (!node.getChildren().isEmpty()) {
+        if (node.hasChilds()) {
             childCount = String.valueOf(node.getChildren().size());
+//            holder.layoutItem.setEnabled(true);
+            holder.tvChildCount.setBackgroundColor(ContextCompat.getColor(context, R.color.colorGray));
         } else {
             childCount = "";
+//            holder.layoutItem.setEnabled(false);
+            holder.tvChildCount.setBackground(null);
         }
         holder.tvChildCount.setText(childCount);
         holder.layoutItem.setOnClickListener(new View.OnClickListener() {
@@ -75,7 +94,10 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
                 }
 
                 if (node.hasChilds()) {
-                    updateList((List<T>) node.getChildren());
+                    updateList((List<T>) node.getChildren(), animatorChilds);
+                } else {
+                    selectedNodePosition = position;
+                    runActivity(node, EditSourceActivity.REQUEST_NODE_EDIT);
                 }
             }
         });
@@ -99,11 +121,14 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
                         int id = item.getItemId();
 
                         if (id == R.id.item_add) {
+                            DefaultSource source = new DefaultSource();
+                            source.setOperationType(((Source) node).getOperationType());
 
+                            clickListener.onPopupMenuClicked(node);
+                            runActivity(source, EditSourceActivity.REQUEST_CHILD_NODE_ADD);
                         } else if (id == R.id.item_edit) {
                             selectedNodePosition = position;
-                            runEditActivity(node);
-
+                            runActivity(node, EditSourceActivity.REQUEST_NODE_EDIT);
                         } else if (id == R.id.item_delete) {
                             new AlertDialog.Builder(context)
                                     .setTitle(R.string.confirm)
@@ -112,21 +137,20 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
                                         @Override
                                         public void onClick(DialogInterface dialog, int which) {
 
-                                            list.remove(node);
+                                            adapterList.remove(node);
                                             notifyItemRemoved(position);
 
-                                            Snackbar.make(holder.buttonPopup, R.string.deleted, Snackbar.LENGTH_SHORT)
-                                                    .setAction(R.string.undo, new View.OnClickListener() {
-                                                        @Override
-                                                        public void onClick(View v) {
-                                                            if (node.hasParent()) {
-                                                                node.getParent().add(node);
-                                                            } else {
-                                                                list.add(position, (T) node);
-                                                            }
-                                                            notifyDataSetChanged();
-                                                        }
-                                                    }).addCallback(new BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                                            snackbar.setAction(R.string.undo, new View.OnClickListener() {
+                                                @Override
+                                                public void onClick(View v) {
+                                                    if (node.hasParent()) {
+                                                        node.getParent().add(node);
+                                                    } else {
+                                                        adapterList.add(position, (T) node);
+                                                    }
+                                                    notifyDataSetChanged();
+                                                }
+                                            }).addCallback(new BaseTransientBottomBar.BaseCallback<Snackbar>() {
                                                 @Override
                                                 public void onDismissed(Snackbar transientBottomBar, int event) {
                                                     if (event == Snackbar.Callback.DISMISS_EVENT_TIMEOUT
@@ -134,7 +158,8 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
                                                         deleteNode((Source) node, position);
                                                     }
                                                 }
-                                            }).show();
+                                            });
+                                            snackbar.show();
 
                                         }
                                     }).setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
@@ -152,10 +177,86 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
         });
     }
 
-    private void runEditActivity(TreeNode node) {
+    private void createAnimations() {
+
+        animatorParents = new BaseItemAnimator() {
+
+            @Override
+            protected void animateRemoveImpl(final RecyclerView.ViewHolder holder) {
+                ViewCompat.animate(holder.itemView)
+                        .translationX(holder.itemView.getRootView().getWidth())
+                        .setDuration(getRemoveDuration())
+                        .setInterpolator(mInterpolator)
+                        .setListener(new DefaultRemoveVpaListener(holder))
+                        .setStartDelay(getRemoveDelay(holder))
+                        .start();
+            }
+
+            @Override
+            protected void preAnimateAddImpl(RecyclerView.ViewHolder holder) {
+                ViewCompat.setTranslationX(holder.itemView, -holder.itemView.getRootView().getWidth());
+            }
+
+            @Override
+            protected void animateAddImpl(final RecyclerView.ViewHolder holder) {
+                ViewCompat.animate(holder.itemView)
+                        .translationX(0)
+                        .setDuration(getAddDuration())
+                        .setInterpolator(mInterpolator)
+                        .setListener(new DefaultAddVpaListener(holder))
+                        .setStartDelay(getAddDelay(holder))
+                        .start();
+            }
+        };
+
+
+        animatorChilds = new BaseItemAnimator() {
+
+
+            @Override
+            protected void animateRemoveImpl(final RecyclerView.ViewHolder holder) {
+
+                ViewCompat.animate(holder.itemView)
+                        .translationX(-holder.itemView.getRootView().getWidth())
+                        .setDuration(getRemoveDuration())
+                        .setInterpolator(mInterpolator)
+                        .setListener(new DefaultRemoveVpaListener(holder))
+                        .setStartDelay(getRemoveDelay(holder))
+                        .start();
+
+            }
+
+            @Override
+            protected void preAnimateAddImpl(RecyclerView.ViewHolder holder) {
+                ViewCompat.setTranslationX(holder.itemView, holder.itemView.getRootView().getWidth());
+            }
+
+            @Override
+            protected void animateAddImpl(final RecyclerView.ViewHolder holder) {
+                ViewCompat.animate(holder.itemView)
+                        .translationX(0)
+                        .setDuration(getAddDuration())
+                        .setInterpolator(mInterpolator)
+                        .setListener(new DefaultAddVpaListener(holder))
+                        .setStartDelay(getAddDelay(holder))
+                        .start();
+            }
+        };
+
+    }
+
+    private void hideSnackbar() {
+        if (snackbar != null && snackbar.isShown()) {
+            snackbar.dismiss();
+        }
+    }
+
+    private void runActivity(TreeNode node, int requestCode) {
+        hideSnackbar();
+
         Intent intent = new Intent(context, EditSourceActivity.class);
         intent.putExtra(EditSourceActivity.NODE_OBJECT, node);
-        ((Activity) context).startActivityForResult(intent, EditSourceActivity.REQUEST_NODE_EDIT);
+        ((Activity) context).startActivityForResult(intent, requestCode, ActivityOptionsCompat.makeSceneTransitionAnimation((Activity) context).toBundle());
     }
 
     private void deleteNode(Source node, int position) {
@@ -173,18 +274,46 @@ public class TreeNodeAdapter<T extends TreeNode> extends RecyclerView.Adapter<Tr
 
     @Override
     public int getItemCount() {
-        return list.size();
+        return adapterList.size();
     }
 
-    public void updateList(List<T> newList) {
-        list = newList;
-        notifyDataSetChanged();
+    public void updateList(List<T> newList, RecyclerView.ItemAnimator animator) {
+        hideSnackbar();
+
+        recyclerView.setItemAnimator(animator);
+        int range = adapterList.size();
+        notifyItemRangeRemoved(0, range);
+
+        adapterList = newList;
+        notifyItemRangeInserted(0, adapterList.size());
     }
 
     public void updateNode(TreeNode node) {
         try {
             Initializer.getSourceSync().update((Source) node);
             notifyItemChanged(selectedNodePosition);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addNode(TreeNode node) {
+        try {
+            Source source = (Source) node;
+            Initializer.getSourceSync().add(source);
+            notifyDataSetChanged();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addChild(TreeNode node) {
+        try {
+            Source source = (Source) node;
+            Initializer.getSourceSync().add(source);
+            adapterList = (List<T>) node.getParent().getChildren();
+            clickListener.onItemClicked(node.getParent());
+            notifyDataSetChanged();
         } catch (SQLException e) {
             e.printStackTrace();
         }

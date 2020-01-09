@@ -39,5 +39,9 @@
 
     <string name="title">Название</string>
     <string name="type">Тип</string>
+    <string name="icon">Иконка</string>
+    <string name="adding">Добавление</string>
+    <string name="editing">Редактирование</string>
+    <string name="empty_name">Пустое название</string>
 
 </resources>

@@ -1,7 +1,9 @@
 package ru.javabegin.tutorial.androidfinance.activities;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.transition.Slide;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -12,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityOptionsCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.FragmentManager;
@@ -33,16 +36,19 @@ import ru.javabegin.tutorial.androidfinance.fragments.SprListFragment;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, SprListFragment.OnListFragmentInteractionListener {
 
-    private TreeNode selectedParentNode;
-    private List<? extends TreeNode> list;
-
-    private TextView toolbarTitle;
+    private TabLayout tabLayout;
     private Toolbar toolbar;
+    private TextView toolbarTitle;
     private ImageView backIcon;
     private ImageView addIcon;
-    private TabLayout tabLayout;
 
     private SprListFragment sprListFragment;
+
+    private TreeNode selectedParentNode;
+
+    private List<? extends TreeNode> list;
+
+    private OperationType defaultType = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +62,7 @@ public class MainActivity extends AppCompatActivity
         initFloatingButton();
         initFragment();
         initTabs();
+        setupWindowAnimations();
 
         list = Initializer.getSourceSync().getAll();
     }
@@ -71,12 +78,15 @@ public class MainActivity extends AppCompatActivity
                 switch (tab.getPosition()) {
                     case 0:
                         list = Initializer.getSourceSync().getAll();
+                        defaultType = null;
                         break;
                     case 1:
                         list = Initializer.getSourceSync().getList(OperationType.INCOME);
+                        defaultType = OperationType.INCOME;
                         break;
                     case 2:
                         list = Initializer.getSourceSync().getList(OperationType.OUTCOME);
+                        defaultType = OperationType.OUTCOME;
                         break;
                 }
                 sprListFragment.updateList(list);
@@ -142,12 +152,12 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 DefaultSource source = new DefaultSource();
-                if (selectedParentNode != null) {
-                    source.setOperationType(((Source) selectedParentNode).getOperationType());
+                if (defaultType != null) {
+                    source.setOperationType(defaultType);
                 }
                 Intent intent = new Intent(MainActivity.this, EditSourceActivity.class);
                 intent.putExtra(EditSourceActivity.NODE_OBJECT, source);
-                startActivityForResult(intent, EditSourceActivity.REQUEST_NODE_ADD);
+                startActivityForResult(intent, EditSourceActivity.REQUEST_NODE_ADD, ActivityOptionsCompat.makeSceneTransitionAnimation(MainActivity.this).toBundle());
             }
         });
     }
@@ -173,7 +183,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
+//        getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
@@ -220,6 +230,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onItemClicked(TreeNode node) {
         this.selectedParentNode = node;
+        this.defaultType = ((Source) selectedParentNode).getOperationType();
         if (selectedParentNode.hasChilds()) {
             toolbarTitle.setText(selectedParentNode.getName());// показывает выбранную категорию
             backIcon.setVisibility(View.VISIBLE);
@@ -227,15 +238,42 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void onPopupMenuClicked(TreeNode node) {
+        this.selectedParentNode = node;
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == RESULT_OK) {
-            if (requestCode == EditSourceActivity.REQUEST_NODE_EDIT) {
-                if (data != null) {
-                    TreeNode node = (TreeNode) data.getSerializableExtra(EditSourceActivity.NODE_OBJECT);
+
+        TreeNode node;
+        if (resultCode == RESULT_OK && data != null) {
+            switch (requestCode) {
+                case EditSourceActivity.REQUEST_NODE_EDIT:
+                    node = (TreeNode) data.getSerializableExtra(EditSourceActivity.NODE_OBJECT);
                     sprListFragment.updateNode(node);
-                }
+                    break;
+                case EditSourceActivity.REQUEST_NODE_ADD:
+                    node = (TreeNode) data.getSerializableExtra(EditSourceActivity.NODE_OBJECT);
+                    if (selectedParentNode != null) {
+                        node.setParent(selectedParentNode);
+                    }
+                    sprListFragment.addNode(node);
+                    break;
+                case EditSourceActivity.REQUEST_CHILD_NODE_ADD:
+                    node = (TreeNode) data.getSerializableExtra(EditSourceActivity.NODE_OBJECT);
+                    node.setParent(selectedParentNode);
+                    sprListFragment.addChild(node);
+                    break;
             }
+        }
+    }
+
+    private void setupWindowAnimations() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            Slide slide = new Slide();
+            slide.setDuration(1000);
+            getWindow().setExitTransition(slide);
         }
     }
 }

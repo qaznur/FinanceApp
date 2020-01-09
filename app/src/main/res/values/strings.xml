@@ -39,6 +39,10 @@
 
     <string name="title">Title</string>
     <string name="type">Type</string>
+    <string name="icon">Icon</string>
+    <string name="adding">Adding</string>
+    <string name="editing">Editing</string>
+    <string name="empty_name">Empty name</string>
 
 
 </resources>
